@@ -284,8 +284,7 @@ describe DiscussionTopic do
     expect(d.discussion_type).to eq "not_threaded"
   end
 
-  it "defaults to threaded type with react_discussions_post" do
-    @course.enable_feature!("react_discussions_post")
+  it "defaults to threaded type" do
     topic = @course.discussion_topics.create!(message: "test")
     expect(topic.discussion_type).to eq "threaded"
   end

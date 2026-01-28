@@ -282,7 +282,7 @@ class DiscussionTopic < ActiveRecord::Base
     end
 
     d_type = self["discussion_type"]
-    d_type ||= context.feature_enabled?("react_discussions_post") ? DiscussionTypes::THREADED : DiscussionTypes::NOT_THREADED
+    d_type ||= DiscussionTypes::THREADED
     self.discussion_type = d_type
 
     self.sort_order ||= SortOrder::DEFAULT
