@@ -250,7 +250,7 @@ class DiscussionTopic < ActiveRecord::Base
   def threaded?
     discussion_type == DiscussionTypes::THREADED ||
       (context.discussion_checkpoints_enabled? && checkpoints?) ||
-      (DiscussionTypes::SIDE_COMMENT && has_threaded_replies?)
+      (discussion_type == DiscussionTypes::SIDE_COMMENT && has_threaded_replies?)
   end
   alias_method :threaded, :threaded?
 

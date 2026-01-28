@@ -301,6 +301,15 @@ describe DiscussionTopic do
     expect(@topic.threaded?).to be true
   end
 
+  it "not_threaded discussion type is not threaded even with threaded replies" do
+    topic = @course.discussion_topics.create!(message: "test", discussion_type: "threaded")
+    entry = topic.discussion_entries.create!(message: "test")
+    entry.reply_from(user: @student, html: "reply 1")
+    topic.discussion_type = "not_threaded"
+    topic.save!
+    expect(topic.threaded?).to be false
+  end
+
   it "requires a valid discussion_type" do
     @topic = @course.discussion_topics.build(message: "test", discussion_type: "gesundheit")
     expect(@topic.save).to be false
