@@ -114,11 +114,19 @@ class MasterCourses::ChildSubscription < ActiveRecord::Base
   end
 
   def update_content_in_child_course(where_clause, update_query)
-    if child_content_tags.where(where_clause).update_all(update_query) > 0 # don't run all the rest of it if there's no reason to
-      content_scopes_for_deactivation.each do |scope|
-        scope.where(where_clause).find_ids_in_batches do |ids|
-          scope.where(where_clause).where(scope.klass.primary_key => ids).update_all(update_query)
-        end
+    # Update child_content_tags in batches to avoid hitting the guard_excessive_updates threshold
+    updated = false
+    child_content_tags.where(where_clause).find_ids_in_batches do |ids|
+      child_content_tags.where(id: ids).update_all(update_query)
+      updated = true
+    end
+
+    # don't run all the rest of it if there's no reason to
+    return unless updated
+
+    content_scopes_for_deactivation.each do |scope|
+      scope.where(where_clause).find_ids_in_batches do |ids|
+        scope.where(where_clause).where(scope.klass.primary_key => ids).update_all(update_query)
       end
     end
   end

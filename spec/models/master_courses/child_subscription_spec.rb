@@ -75,5 +75,40 @@ describe MasterCourses::ChildSubscription do
       expect(child_tag.reload.migration_id).to eq mc_tag.migration_id
       expect(child_course.reload.syllabus_master_template_id).to eq @template.id.to_s
     end
+
+    it "deactivates migration ids in batches to avoid guard_excessive_updates" do
+      master_course = course_factory
+      @template = MasterCourses::MasterTemplate.set_as_master_course(master_course)
+      child_course = course_factory
+      sub = @template.add_child_course!(@course)
+
+      # Create multiple pages with tags to verify batching works
+      pages = []
+      child_tags = []
+      3.times do |i|
+        original_page = master_course.wiki_pages.create!(title: "page #{i}")
+        mc_tag = @template.create_content_tag_for!(original_page)
+        page_copy = child_course.wiki_pages.create!(title: "page #{i}", migration_id: mc_tag.migration_id)
+        child_tag = sub.create_content_tag_for!(page_copy)
+        pages << { original: original_page, copy: page_copy, mc_tag: }
+        child_tags << child_tag
+      end
+
+      sub.destroy!
+
+      # Verify all child tags and pages were updated with deactivation prefix
+      child_tags.each_with_index do |child_tag, i|
+        expect(child_tag.reload.migration_id).to eq(sub.deactivation_prefix + pages[i][:mc_tag].migration_id)
+        expect(pages[i][:copy].reload.migration_id).to eq(sub.deactivation_prefix + pages[i][:mc_tag].migration_id)
+      end
+
+      sub.undestroy
+
+      # Verify all were reactivated
+      child_tags.each_with_index do |child_tag, i|
+        expect(child_tag.reload.migration_id).to eq pages[i][:mc_tag].migration_id
+        expect(pages[i][:copy].reload.migration_id).to eq pages[i][:mc_tag].migration_id
+      end
+    end
   end
 end
