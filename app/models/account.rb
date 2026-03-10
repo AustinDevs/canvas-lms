@@ -28,7 +28,6 @@ class Account < ActiveRecord::Base
   CALENDAR_SUBSCRIPTION_TYPES = %w[manual auto].freeze
   HORIZON_FEATURE_SLUG = "horizon"
 
-  self.ignored_columns += [:equella_endpoint]
 
   include Workflow
   include BrandConfigHelpers
